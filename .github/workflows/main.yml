@@ -24,6 +24,8 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Run scraper
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python test_engine.py
 
       - name: Commit and push updated CSV
