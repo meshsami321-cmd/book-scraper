@@ -4,6 +4,7 @@ import time
 from urllib.parse import urljoin
 import csv
 import os
+import smtplib
 
 base_url = "http://books.toscrape.com"
 current_url = base_url
@@ -54,3 +55,23 @@ while current_url:
 
 csv_file.close()
 print(f"\nDone. {total_books} books saved to books_catalog.csv")
+# Phase 4: Act (Email Notification)
+sender_email = "meshsami321@gmail.com"
+receiver_email = "meshsami321@gmail.com"
+
+# Retrieve the secure key from the GitHub memory vault
+app_password = os.environ.get("GMAIL_APP_PASSWORD") 
+
+subject = "Automation Engine Alert"
+body = "The data harvesting pipeline has executed successfully and updated the books catalog."
+email_message = f"Subject: {subject}\n\n{body}"
+
+try:
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(sender_email, app_password)
+    server.sendmail(sender_email, receiver_email, email_message)
+    server.quit()
+    print("Alert routed successfully.")
+except Exception as error_signal:
+    print(f"Alert routing failed: {error_signal}")
