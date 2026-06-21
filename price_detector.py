@@ -33,19 +33,26 @@ else:
     # ---- Build email alert (optional, works when GMAIL_APP_PASSWORD is set) ----
     app_password = os.environ.get("GMAIL_APP_PASSWORD")
     if app_password:
+        from email.mime.text import MIMEText
+
         sender = "meshsami321@gmail.com"
         receiver = "meshsami321@gmail.com"
         subject = "Price Drop Alert"
         body = f"Found {len(drops)} price drop(s):\n\n"
         for _, row in drops.iterrows():
             body += f"{row['Title']}: £{row['Price_yesterday']:.2f} -> £{row['Price_today']:.2f}\n"
-        message = f"Subject: {subject}\n\n{body}"
+
+        # Create a MIMEText object with UTF-8 encoding
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = subject
+        msg["From"] = sender
+        msg["To"] = receiver
 
         try:
             server = smtplib.SMTP("smtp.gmail.com", 587)
             server.starttls()
             server.login(sender, app_password)
-            server.sendmail(sender, receiver, message)
+            server.sendmail(sender, receiver, msg.as_string())
             server.quit()
             print("\nEmail alert sent.")
         except Exception as e:
