@@ -1,6 +1,8 @@
 import pandas as pd
 import smtplib
 import os
+import json
+from email.mime.text import MIMEText
 
 # ---- Load today's and yesterday's data ----
 try:
@@ -30,31 +32,40 @@ else:
     for _, row in drops.iterrows():
         print(f"  {row['Title']}: £{row['Price_yesterday']:.2f} -> £{row['Price_today']:.2f} (down £{row['price_drop']:.2f})")
 
-    # ---- Build email alert (optional, works when GMAIL_APP_PASSWORD is set) ----
+    # ---- Load subscriber list ----
+    try:
+        with open("subscribers.json", "r") as f:
+            subscribers = json.load(f)
+    except FileNotFoundError:
+        print("\nsubscribers.json not found – skipping email.")
+        exit()
+
+    if not subscribers:
+        print("\nSubscriber list is empty – skipping email.")
+        exit()
+
+    # ---- Build email alert ----
     app_password = os.environ.get("GMAIL_APP_PASSWORD")
     if app_password:
-        from email.mime.text import MIMEText
-
         sender = "meshsami321@gmail.com"
-        receiver = "meshsami321@gmail.com"
         subject = "Price Drop Alert"
         body = f"Found {len(drops)} price drop(s):\n\n"
         for _, row in drops.iterrows():
             body += f"{row['Title']}: £{row['Price_yesterday']:.2f} -> £{row['Price_today']:.2f}\n"
 
-        # Create a MIMEText object with UTF-8 encoding
         msg = MIMEText(body, "plain", "utf-8")
         msg["Subject"] = subject
         msg["From"] = sender
-        msg["To"] = receiver
+        msg["To"] = sender  # primary To field (can be your own email)
+        msg["Bcc"] = ", ".join(subscribers)
 
         try:
             server = smtplib.SMTP("smtp.gmail.com", 587)
             server.starttls()
             server.login(sender, app_password)
-            server.sendmail(sender, receiver, msg.as_string())
+            server.sendmail(sender, [sender] + subscribers, msg.as_string())
             server.quit()
-            print("\nEmail alert sent.")
+            print(f"\nEmail alert sent to {len(subscribers)} subscriber(s).")
         except Exception as e:
             print(f"\nEmail failed: {e}")
     else:
