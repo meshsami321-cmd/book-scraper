@@ -48,15 +48,17 @@ else:
     app_password = os.environ.get("GMAIL_APP_PASSWORD")
     if app_password:
         sender = "meshsami321@gmail.com"
-        subject = "Price Drop Alert"
+        sender_name = "Samuel - Price Drop Alerts"
+        subject = "Price Drop Alert – Your Books Just Got Cheaper"
+
         body = f"Found {len(drops)} price drop(s):\n\n"
         for _, row in drops.iterrows():
             body += f"{row['Title']}: £{row['Price_yesterday']:.2f} -> £{row['Price_today']:.2f}\n"
 
         msg = MIMEText(body, "plain", "utf-8")
         msg["Subject"] = subject
-        msg["From"] = sender
-        msg["To"] = sender  # primary To field (can be your own email)
+        msg["From"] = f"{sender_name} <{sender}>"
+        msg["To"] = sender
         msg["Bcc"] = ", ".join(subscribers)
 
         try:
